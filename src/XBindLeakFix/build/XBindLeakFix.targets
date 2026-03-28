@@ -1,0 +1,83 @@
+<Project>
+  <!--
+    XBindLeakFix: Automatic build-time fix for WinUI 3 x:Bind memory leak
+    https://github.com/microsoft/microsoft-ui-xaml/issues/7282
+
+    The WinUI 3 XAML compiler generates "Window.Activated += bindings.Activated"
+    but never generates cleanup code. Since Window is not a DependencyObject,
+    the XAML Reference Tracker can't break the resulting circular reference,
+    causing every x:Bind Window to leak permanently.
+
+    This target runs after XAML compilation but before C# compilation,
+    injecting a Closed handler that breaks the cycle on window close.
+  -->
+  <UsingTask TaskName="PatchXBindLeak"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <SearchDir ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs">
+<![CDATA[
+foreach (var file in Directory.GetFiles(SearchDir, "*.g.cs", SearchOption.AllDirectories))
+{
+    var lines = File.ReadAllLines(file);
+    var text = string.Join("\n", lines);
+
+    if (!text.Contains("Microsoft.UI.Xaml.Window") ||
+        !text.Contains(".Activated += bindings.Activated"))
+        continue;
+
+    if (text.Contains("[XBindLeakFix]"))
+        continue;
+
+    var result = new List<string>();
+    string elemVar = null;
+
+    for (int i = 0; i < lines.Length; i++)
+    {
+        result.Add(lines[i]);
+        var trimmed = lines[i].TrimStart();
+        var indent = lines[i].Substring(0, lines[i].Length - trimmed.Length);
+
+        if (trimmed.Contains("Microsoft.UI.Xaml.Window") && trimmed.Contains("element"))
+        {
+            var m = Regex.Match(trimmed, @"(element\d+)\s*=");
+            if (m.Success) elemVar = m.Groups[1].Value;
+        }
+
+        if (elemVar != null && trimmed == elemVar + ".Activated += bindings.Activated;")
+        {
+            result.Add(indent + "// [XBindLeakFix] github.com/microsoft/microsoft-ui-xaml/issues/7282");
+            result.Add(indent + elemVar + ".Closed += (_, _) =>");
+            result.Add(indent + "{");
+            result.Add(indent + "    var ___f = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;");
+            result.Add(indent + "    foreach (var ___field in bindings.GetType().GetFields(___f))");
+            result.Add(indent + "    {");
+            result.Add(indent + "        if (___field.Name == \"initialized\" && ___field.FieldType == typeof(bool))");
+            result.Add(indent + "            ___field.SetValue(bindings, true);");
+            result.Add(indent + "        else if (!___field.FieldType.IsValueType && !___field.IsInitOnly)");
+            result.Add(indent + "            ___field.SetValue(bindings, null);");
+            result.Add(indent + "    }");
+            result.Add(indent + "};");
+            elemVar = null;
+        }
+    }
+
+    File.WriteAllLines(file, result);
+    Log.LogMessage(MessageImportance.High, "[XBindLeakFix] Patched: " + Path.GetFileName(file));
+}
+]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="XBindLeakFix" BeforeTargets="CoreCompile">
+    <PatchXBindLeak SearchDir="$(ProjectDir)$(IntermediateOutputPath)" />
+  </Target>
+</Project>

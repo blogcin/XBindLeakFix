@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WinUI3Leak (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "WinUI3Leak (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+[Bb]in/
+[Oo]bj/
+*.nupkg
+artifacts/
+.vs/
+*.suo
+*.user
+leak_test.log
+Thumbs.db
+.DS_Store

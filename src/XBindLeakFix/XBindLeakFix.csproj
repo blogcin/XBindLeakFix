@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+
+    <PackageId>XBindLeakFix</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>hssong</Authors>
+    <Description>Automatic build-time fix for the WinUI 3 x:Bind memory leak (microsoft/microsoft-ui-xaml#7282). Patches XAML compiler output to break the circular reference on Window.Closed.</Description>
+    <PackageTags>winui3;winui;xbind;memory-leak;xaml;fix</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/hssong/XBindLeakFix</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="build\XBindLeakFix.targets" Pack="true" PackagePath="build\" />
+    <None Include="build\XBindLeakFix.targets" Pack="true" PackagePath="buildTransitive\" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

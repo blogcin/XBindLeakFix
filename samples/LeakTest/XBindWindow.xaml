@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="WinUI3Leak.XBindWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="x:Bind Window (LEAK)">
+
+    <Grid Padding="20">
+        <StackPanel VerticalAlignment="Center" Spacing="12">
+            <TextBlock Text="This window uses x:Bind for event binding." FontSize="16" />
+            <TextBlock Text="It will NOT be garbage collected after closing." Foreground="Red" FontSize="14" />
+            <Button Content="Click Me (x:Bind)" Click="{x:Bind OnButtonClick}" HorizontalAlignment="Center" />
+            <TextBlock x:Name="StatusText" Text="{x:Bind ClickCount, Mode=OneWay}" FontSize="14" />
+
+            <!-- Allocate extra memory to make the leak more visible -->
+            <ListView ItemsSource="{x:Bind DummyItems}" Height="200">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Text="{x:Bind}" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+    </Grid>
+</Window>
