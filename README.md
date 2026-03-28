@@ -47,6 +47,8 @@ element1.Activated += bindings.Activated;
 
 but never generates the corresponding `-=`. For `FrameworkElement` types this is fine (Reference Tracker handles it). For `Window` (not a `DependencyObject`), the circular reference is permanent.
 
+Full analysis: [I Traced a 4-Year-Old WinUI 3 Memory Leak to 4 Missing Lines in Microsoft's XAML Compiler](https://medium.com/@hyeonsiksong/i-traced-a-4-year-old-winui-3-memory-leak-to-4-missing-lines-in-microsofts-xaml-compiler-888fa7f2172c)
+
 ## Related issues
 
 - [microsoft/microsoft-ui-xaml#7282](https://github.com/microsoft/microsoft-ui-xaml/issues/7282) — Memory leak when use x:Bind in WinUI 3
